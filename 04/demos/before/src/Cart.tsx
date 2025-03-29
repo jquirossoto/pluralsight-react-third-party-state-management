@@ -1,11 +1,12 @@
-import Spinner from "./Spinner";
-import { useNavigate } from "react-router-dom";
-import { useCart } from "./context/cartContext";
-import { CartItem, Product } from "./types/types";
+import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { cartAtom } from "./atoms/cartAtom";
+import Spinner from "./Spinner";
+import { CartItem, Product } from "./types/types";
 
 export default function Cart() {
-  const { cart, setCart } = useCart();
+  const [cart, setCart] = useAtom(cartAtom);
   const navigate = useNavigate();
 
   const [products, setProducts] = useState<Product[] | null>(null);
