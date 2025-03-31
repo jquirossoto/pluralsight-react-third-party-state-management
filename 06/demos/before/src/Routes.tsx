@@ -1,17 +1,18 @@
-import "./App.css";
-import Products from "./Products.tsx";
+import { Suspense } from "react";
 import {
-  Route,
   createBrowserRouter,
   createRoutesFromElements,
+  Route,
   RouterProvider,
 } from "react-router-dom";
-import Detail from "./Detail.tsx";
+import { Account } from "./Account.tsx";
+import "./App.css";
 import Cart from "./Cart.tsx";
 import Checkout from "./Checkout.tsx";
+import Detail from "./Detail.tsx";
 import Faker from "./Faker.tsx";
 import { Layout } from "./Layout.tsx";
-import { Account } from "./Account.tsx";
+import Products from "./Products.tsx";
 
 export default function App() {
   const router = createBrowserRouter(
@@ -23,7 +24,14 @@ export default function App() {
           element={<Products />}
           errorElement={<h1>Sorry, failed to load products.</h1>}
         />
-        <Route path="/:category/:id" element={<Detail />} />
+        <Route
+          path="/:category/:id"
+          element={
+            <Suspense fallback={<h1>Loading...</h1>}>
+              <Detail />
+            </Suspense>
+          }
+        />
         <Route
           path="/cart"
           element={<Cart />}

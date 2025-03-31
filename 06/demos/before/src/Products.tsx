@@ -1,36 +1,46 @@
-import { useEffect, useState } from "react";
-import Spinner from "./Spinner";
-import { useParams, Link } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import PageNotFound from "./PageNotFound";
+import Spinner from "./Spinner";
 import { Product } from "./types/types";
 
 export default function Products() {
   const [size, setSize] = useState("");
   const { category } = useParams();
+  const queryClient = useQueryClient();
 
-  const [products, setProducts] = useState<Product[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await fetch(
-          import.meta.env.VITE_APP_API_BASE_URL + "products"
-        );
-        if (!data.ok) {
-          throw new Error(`Product not found: ${data.status}`);
-        }
-        const products = await data.json();
-        setProducts(products);
-      } catch (error) {
-        setError(error as Error);
-      } finally {
-        setLoading(false);
+  const {
+    data: products,
+    isLoading: loading,
+    error,
+  } = useQuery<Product[]>({
+    queryKey: ["products", category],
+    queryFn: async () => {
+      const data = await fetch(
+        import.meta.env.VITE_APP_API_BASE_URL + "products"
+      );
+      if (!data.ok) {
+        throw new Error(`Product not found: ${data.status}`);
       }
-    }
-    fetchData();
-  }, []);
+      return await data.json();
+    },
+  });
+
+  const deleteProduct = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(
+        import.meta.env.VITE_APP_API_BASE_URL + "products/" + id,
+        { method: "DELETE" }
+      );
+
+      if (!response.ok) throw response;
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["products", category] });
+    },
+  });
 
   function renderProduct(p: Product) {
     return (
@@ -40,6 +50,7 @@ export default function Products() {
           <h3>{p.name}</h3>
           <p>${p.price}</p>
         </Link>
+        <button onClick={() => deleteProduct.mutate(p.id)}>Delete</button>
       </div>
     );
   }
